@@ -3,6 +3,9 @@ const express = require('express');
 const path = require('path');
 const { pool, initDB } = require('./db');
 const { seed } = require('./seed');
+const { icon, DAY_ICON, TYPE_ICON, CATEGORY_ICON, CATEGORY_LABEL, STATUS_ICON, STATUS_LABEL } = require('./icons');
+
+const iconLocals = { icon, DAY_ICON, TYPE_ICON, CATEGORY_ICON, CATEGORY_LABEL, STATUS_ICON, STATUS_LABEL };
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -19,7 +22,7 @@ app.use(express.urlencoded({ extended: true }));
 app.get('/', async (req, res) => {
   try {
     const trips = await pool.query('SELECT * FROM trips ORDER BY created_at DESC');
-    res.render('index', { trips: trips.rows });
+    res.render('index', { trips: trips.rows, ...iconLocals });
   } catch (err) {
     console.error(err);
     res.status(500).send('Error loading trips');
@@ -54,7 +57,8 @@ app.get('/trip/:id', async (req, res) => {
       spots: spotsRes.rows,
       progress: total > 0 ? Math.round((done / total) * 100) : 0,
       doneCnt: done,
-      totalCnt: total
+      totalCnt: total,
+      ...iconLocals
     });
   } catch (err) {
     console.error(err);
@@ -100,12 +104,12 @@ app.post('/api/trips', async (req, res) => {
 app.post('/api/trips/:id/checklist', async (req, res) => {
   try {
     const { id } = req.params;
-    const { text, priority, deadline } = req.body;
+    const { text, priority, deadline, category } = req.body;
     const max = await pool.query('SELECT MAX(sort_order) as mx FROM checklist_items WHERE trip_id=$1', [id]);
     const order = (max.rows[0].mx || 0) + 1;
     const result = await pool.query(
-      'INSERT INTO checklist_items (trip_id, text, priority, deadline, sort_order) VALUES ($1,$2,$3,$4,$5) RETURNING *',
-      [id, text, priority || 'normal', deadline || '', order]
+      'INSERT INTO checklist_items (trip_id, text, priority, deadline, category, sort_order) VALUES ($1,$2,$3,$4,$5,$6) RETURNING *',
+      [id, text, priority || 'normal', deadline || '', category || 'tarea', order]
     );
     res.json(result.rows[0]);
   } catch (err) {

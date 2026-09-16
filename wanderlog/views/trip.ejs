@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title><%= trip.name %> — WanderLog</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,500;1,9..144,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
@@ -11,7 +14,7 @@
 <canvas id="particles"></canvas>
 
 <nav id="nav">
-  <a href="/" class="logo">wander<span>log</span><sup>✈</sup></a>
+  <a href="/" class="logo">wander<span>log</span><span class="logo-mark"><%- icon('plane', {size:15}) %></span></a>
   <div class="nav-links">
     <a href="/">← Mis viajes</a>
     <a href="#itinerario">Itinerario</a>
@@ -26,14 +29,14 @@
   <div class="trip-hero-img" style="background-image:url('<%= trip.cover_url %>')"></div>
   <div class="trip-hero-ov"></div>
   <div class="trip-hero-content">
-    <div class="trip-hero-tag"><%= trip.flag %> <%= trip.country %></div>
+    <div class="trip-hero-tag"><%- icon('pin', {size:13}) %> <%= trip.country %></div>
     <h1 class="trip-hero-title"><%= trip.name %></h1>
     <p class="trip-hero-sub"><%= trip.description %></p>
     <div class="trip-hero-pills">
-      <% if (trip.start_date) { %><span class="hpill">📅 <%= new Date(trip.start_date).toLocaleDateString('es',{day:'numeric',month:'long'}) %> — <%= new Date(trip.end_date).toLocaleDateString('es',{day:'numeric',month:'long',year:'numeric'}) %></span><% } %>
+      <% if (trip.start_date) { %><span class="hpill"><%- icon('calendar', {size:13}) %> <%= new Date(trip.start_date).toLocaleDateString('es',{day:'numeric',month:'long'}) %> — <%= new Date(trip.end_date).toLocaleDateString('es',{day:'numeric',month:'long',year:'numeric'}) %></span><% } %>
       <span class="hpill"><%= days.length %> días</span>
-      <span class="hpill pill-teal">🚁 Drone habilitado</span>
-      <span class="hpill"><%= spots.length %> spots fotográficos</span>
+      <span class="hpill pill-teal"><%- icon('drone', {size:13}) %> Drone habilitado</span>
+      <span class="hpill"><%- icon('camera', {size:13}) %> <%= spots.length %> spots fotográficos</span>
     </div>
   </div>
 </div>
@@ -46,18 +49,18 @@
     <div class="itin-section-title reveal">Itinerario día a día</div>
 
     <% days.forEach((day, i) => { %>
-    <div class="day-card reveal d<%= (i%4)+1 %>">
+    <div class="day-card spotlight reveal d<%= (i%4)+1 %>">
       <div class="day-header">
         <div class="day-badge">D<%= day.day_number %></div>
         <div class="day-info">
-          <div class="day-title"><%= day.icon %> <%= day.title %></div>
+          <div class="day-title"><%- icon(DAY_ICON[day.day_number] || 'sparkle', {size:15}) %> <%= day.title %></div>
           <div class="day-sub"><%= day.subtitle %> <% if(day.date){ %> · <%= new Date(day.date).toLocaleDateString('es',{weekday:'long',day:'numeric',month:'short'}) %><% } %></div>
         </div>
         <div class="day-tags">
-          <% if (day.has_car) { %><span class="day-tag tag-car">🚗 Carro</span><% } %>
-          <% if (day.drone_ok) { %><span class="day-tag tag-drone">🚁 Drone OK</span><% } else { %><span class="day-tag tag-no-drone">🚫 Sin drone</span><% } %>
+          <% if (day.has_car) { %><span class="day-tag tag-car"><%- icon('car', {size:11}) %> Carro</span><% } %>
+          <% if (day.drone_ok) { %><span class="day-tag tag-drone"><%- icon('drone', {size:11}) %> Drone OK</span><% } else { %><span class="day-tag tag-no-drone"><%- icon('ban', {size:11}) %> Sin drone</span><% } %>
         </div>
-        <span class="day-chevron">▼</span>
+        <span class="day-chevron">▾</span>
       </div>
       <div class="day-body">
         <% day.activities.forEach(act => { %>
@@ -65,7 +68,7 @@
           <div class="act-time"><%= act.time %></div>
           <div class="act-dot dot-<%= act.type %>"></div>
           <div class="act-info">
-            <div class="act-title"><%= act.icon %> <%= act.title %></div>
+            <div class="act-title"><%- icon(TYPE_ICON[act.type] || 'sparkle', {size:13}) %> <%= act.title %></div>
             <% if (act.description) { %><div class="act-desc"><%= act.description %></div><% } %>
           </div>
         </div>
@@ -77,9 +80,9 @@
 
   <!-- SIDEBAR -->
   <div class="trip-sidebar">
-    <div class="sidebar-card reveal sticky" style="position:sticky;top:90px;">
-      <div class="sidebar-title">✅ Preparación</div>
-      <div class="prog-pct-val" style="font-family:'Playfair Display',serif;font-size:42px;font-weight:700;color:var(--purple);text-align:center;margin:6px 0 10px;"><%= progress %>%</div>
+    <div class="sidebar-card spotlight reveal sticky" style="position:sticky;top:90px;">
+      <div class="sidebar-title"><%- icon('check-circle', {size:16}) %> Preparación</div>
+      <div class="prog-pct-val count-up" data-target="<%= progress %>" style="font-family:var(--font-display);font-size:42px;font-weight:700;color:var(--purple);text-align:center;margin:6px 0 10px;"><%= progress %>%</div>
       <div class="prog-bar">
         <div class="prog-fill" style="width:<%= progress %>%"></div>
       </div>
@@ -91,11 +94,11 @@
       <div style="margin-top:20px;border-top:1px solid var(--cream2);padding-top:16px;">
         <% const urgent = checklist.filter(c=>c.priority==='urgente' && !c.done).slice(0,4); %>
         <% if (urgent.length > 0) { %>
-        <div style="font-size:12px;font-weight:700;color:var(--dark);margin-bottom:10px;">🔴 Urgentes pendientes</div>
+        <div style="display:flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:var(--dark);margin-bottom:10px;"><span class="cdot cdot-r"></span> Urgentes pendientes</div>
         <% urgent.forEach(item => { %>
-        <div class="ci">
-          <div class="cbox <%= item.done?'checked':'' %>" data-id="<%= item.id %>"></div>
-          <div>
+        <div class="ci" style="opacity:1;transform:none;">
+          <div class="cbox <%= item.done?'checked':'' %>" data-id="<%= item.id %>"><svg class="cbox-check" viewBox="0 0 16 16"><path d="M3.5 8.5l3 3 6-7"/></svg></div>
+          <div class="ci-body">
             <div class="ci-text <%= item.done?'done':'' %>"><%= item.text %></div>
             <div class="ci-dl"><%= item.deadline %></div>
           </div>
@@ -103,7 +106,7 @@
         <% }) %>
         <% } %>
       </div>
-      <a href="#checklist" class="btn-primary" style="display:block;text-align:center;margin-top:16px;font-size:13px;padding:11px 20px;">Ver checklist completo →</a>
+      <a href="#checklist" class="btn-primary" style="display:flex;justify-content:center;text-align:center;margin-top:16px;font-size:13px;padding:11px 20px;">Ver checklist completo →</a>
     </div>
   </div>
 </div>
@@ -113,7 +116,7 @@
 <!-- SPOTS -->
 <% if (spots.length > 0) { %>
 <section style="background:white;" id="spots">
-  <div class="section-tag reveal">📸 Fotografía</div>
+  <div class="section-tag reveal"><%- icon('camera', {size:13}) %> Fotografía</div>
   <h2 class="section-title reveal">Spots <em>imperdibles</em></h2>
   <p class="section-sub reveal">Las tomas que no pueden faltar — para drone y para cámara.</p>
   <div class="spots-grid reveal">
@@ -122,7 +125,7 @@
       <div class="scard-bg" style="background-image:url('<%= spot.photo_url %>')"></div>
       <div class="scard-ov"></div>
       <% if(spot.day_ref) { %><div class="scard-day"><%= spot.day_ref %></div><% } %>
-      <% if(spot.drone_ok) { %><div class="scard-drone">🚁 Drone OK</div><% } %>
+      <% if(spot.drone_ok) { %><div class="scard-drone"><%- icon('drone', {size:11}) %> Drone OK</div><% } %>
       <div class="scard-info">
         <div class="scard-name"><%= spot.name %></div>
         <div class="scard-sub"><%= spot.description %></div>
@@ -136,7 +139,7 @@
 
 <!-- CHECKLIST FULL -->
 <section class="check-section-full" id="checklist">
-  <div class="section-tag reveal">✅ Preparación</div>
+  <div class="section-tag reveal"><%- icon('check-circle', {size:13}) %> Preparación</div>
   <h2 class="section-title reveal">Checklist del <em>viaje</em></h2>
   <p class="section-sub reveal">Marca cada tarea a medida que avanzas. Todo se guarda automáticamente.</p>
 
@@ -144,7 +147,7 @@
     <% ['urgente','importante','normal'].forEach((prio, pi) => { %>
     <%
       const items = checklist.filter(c=>c.priority===prio);
-      const labels = {urgente:'🔴 Urgente',importante:'🟡 Importante',normal:'🟢 Normal'};
+      const labels = {urgente:'Urgente',importante:'Importante',normal:'Normal'};
       const deadlines = {urgente:'Antes 10 Sep',importante:'Antes 20 Sep',normal:'Antes 30 Sep'};
       const dotClasses = {urgente:'cdot-r',importante:'cdot-y',normal:'cdot-g'};
     %>
@@ -156,10 +159,13 @@
       </div>
       <% items.forEach(item => { %>
       <div class="ci">
-        <div class="cbox <%= item.done?'checked':'' %>" data-id="<%= item.id %>"></div>
-        <div>
+        <div class="cbox <%= item.done?'checked':'' %>" data-id="<%= item.id %>"><svg class="cbox-check" viewBox="0 0 16 16"><path d="M3.5 8.5l3 3 6-7"/></svg></div>
+        <div class="ci-body">
           <div class="ci-text <%= item.done?'done':'' %>"><%= item.text %></div>
-          <% if(item.deadline) { %><div class="ci-dl"><%= item.deadline %></div><% } %>
+          <div class="ci-meta">
+            <% if(item.deadline) { %><div class="ci-dl"><%= item.deadline %></div><% } %>
+            <span class="ci-cat"><%- icon(CATEGORY_ICON[item.category] || 'sparkle', {size:11}) %><%= CATEGORY_LABEL[item.category] || 'Tarea' %></span>
+          </div>
         </div>
       </div>
       <% }) %>
@@ -174,7 +180,7 @@
       <div class="big-prog-sub"><span class="prog-done-cnt"><%= doneCnt %></span> de <%= totalCnt %> tareas completadas · <%= totalCnt - doneCnt %> pendientes</div>
     </div>
     <div>
-      <div class="big-pct prog-pct-val"><%= progress %>%</div>
+      <div class="big-pct prog-pct-val count-up" data-target="<%= progress %>"><%= progress %>%</div>
       <div class="big-pct-label">completado</div>
     </div>
   </div>
@@ -185,7 +191,7 @@
   <div class="footer-inner">
     <div>
       <a href="/" class="footer-logo">wander<span>log</span></a>
-      <div class="footer-tagline">Tu diario de aventuras · Hecho con ❤️ desde Colombia</div>
+      <div class="footer-tagline">Tu diario de aventuras · Hecho desde Colombia</div>
     </div>
     <div class="footer-links">
       <a href="/">← Mis viajes</a>

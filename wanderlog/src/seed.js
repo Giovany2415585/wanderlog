@@ -1,13 +1,14 @@
 const { pool } = require('./db');
 
-async function seed() {
-  // Check if already seeded
-  const existing = await pool.query("SELECT id FROM trips WHERE name = 'Curazao 2025'");
-  if (existing.rows.length > 0) {
-    console.log('Already seeded, skipping...');
-    return existing.rows[0].id;
-  }
+// Strips emoji / pictographs / variation selectors from seeded copy so older
+// rows (seeded before the icon system existed) render clean on redeploy too.
+const EMOJI_RE = /[\u{1F1E6}-\u{1F1FF}\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}️‍]/gu;
+function clean(s) {
+  if (!s) return s;
+  return s.replace(EMOJI_RE, '').replace(/\s{2,}/g, ' ').replace(/\s+([.,;:])/g, '$1').trim();
+}
 
+async function seedFresh() {
   // Insert trip
   const trip = await pool.query(`
     INSERT INTO trips (name, country, flag, start_date, end_date, status, description, cover_url)
@@ -24,11 +25,11 @@ async function seed() {
   const daysData = [
     { n:1, date:'2025-10-01', title:'Llegada tranquila', subtitle:'Taxi · Pietermaai · Sin carro', icon:'🌙', car:false, drone:false },
     { n:2, date:'2025-10-02', title:'Willemstad histórica', subtitle:'Todo a pie · Fotos icónicas', icon:'📸', car:false, drone:false },
-    { n:3, date:'2025-10-03', title:'Klein Curazao ⛵', subtitle:'Isla deshabitada · Barco todo el día', icon:'🌊', car:false, drone:true },
-    { n:4, date:'2025-10-04', title:'Roadtrip oeste 🚗', subtitle:'Día 1 del carro · Kokomo · Piskado · Kenepa', icon:'🌅', car:true, drone:true },
-    { n:5, date:'2025-10-05', title:'Playas del sur 🚗', subtitle:'Día 2 del carro · Cas Abao · Porto Mari', icon:'🤿', car:true, drone:true },
-    { n:6, date:'2025-10-06', title:'Naturaleza salvaje 🚗', subtitle:'Día 3 del carro · Christoffel · Shete Boka', icon:'🥾', car:true, drone:false },
-    { n:7, date:'2025-10-07', title:'Regreso ✈️', subtitle:'Check-out · Compras · Vuelo 6:15 PM', icon:'🏠', car:false, drone:false },
+    { n:3, date:'2025-10-03', title:'Klein Curazao', subtitle:'Isla deshabitada · Barco todo el día', icon:'🌊', car:false, drone:true },
+    { n:4, date:'2025-10-04', title:'Roadtrip oeste', subtitle:'Día 1 del carro · Kokomo · Piskado · Kenepa', icon:'🌅', car:true, drone:true },
+    { n:5, date:'2025-10-05', title:'Playas del sur', subtitle:'Día 2 del carro · Cas Abao · Porto Mari', icon:'🤿', car:true, drone:true },
+    { n:6, date:'2025-10-06', title:'Naturaleza salvaje', subtitle:'Día 3 del carro · Christoffel · Shete Boka', icon:'🥾', car:true, drone:false },
+    { n:7, date:'2025-10-07', title:'Regreso', subtitle:'Check-out · Compras · Vuelo 6:15 PM', icon:'🏠', car:false, drone:false },
   ];
 
   const dayIds = {};
@@ -43,55 +44,55 @@ async function seed() {
   // Activities for each day
   const activitiesData = {
     1: [
-      { time:'5:00 PM', title:'Llegada aeropuerto Hato ✈️', desc:'Inmigración, maletas y taxi al Airbnb (~$15-20 USD). Sin carro hoy.', icon:'✈️', type:'transport' },
+      { time:'5:00 PM', title:'Llegada aeropuerto Hato', desc:'Inmigración, maletas y taxi al Airbnb (~$15-20 USD). Sin carro hoy.', icon:'✈️', type:'transport' },
       { time:'6:30 PM', title:'Check-in Airbnb · Pietermaai', desc:'Descargar maletas, refrescarse. Todo queda a pie.', icon:'🏠', type:'hotel' },
-      { time:'7:30 PM', title:'Paseo nocturno Pietermaai 📸', desc:'Arquitectura colonial iluminada, murales. Primer contacto con la isla.', icon:'🌙', type:'activity' },
-      { time:'8:30 PM', title:'Cena: Gouverneur de Rouville 🍽', desc:'Vista al Handelskade iluminado. Comida caribeña. ⚠️ Reservar antes del 20 Sep.', icon:'🍽', type:'food' },
+      { time:'7:30 PM', title:'Paseo nocturno Pietermaai', desc:'Arquitectura colonial iluminada, murales. Primer contacto con la isla.', icon:'🌙', type:'activity' },
+      { time:'8:30 PM', title:'Cena: Gouverneur de Rouville', desc:'Vista al Handelskade iluminado. Comida caribeña. Reservar antes del 20 Sep.', icon:'🍽', type:'food' },
     ],
     2: [
-      { time:'9:00 AM', title:'Puente Reina Emma + Handelskade 📸', desc:'Foto icónica #1 de Curazao. Llegar antes de las 10 AM. Patrimonio UNESCO.', icon:'📸', type:'activity' },
-      { time:'10:00 AM', title:'Letras CURAÇAO en Wilhelminaplein 📸', desc:'Foto obligatoria a metros del puente.', icon:'📸', type:'activity' },
+      { time:'9:00 AM', title:'Puente Reina Emma + Handelskade', desc:'Foto icónica #1 de Curazao. Llegar antes de las 10 AM. Patrimonio UNESCO.', icon:'📸', type:'activity' },
+      { time:'10:00 AM', title:'Letras CURAÇAO en Wilhelminaplein', desc:'Foto obligatoria a metros del puente.', icon:'📸', type:'activity' },
       { time:'10:30 AM', title:'Floating Market + Fort Amsterdam', desc:'Mercado flotante venezolano único en el Caribe. Fortaleza del siglo XVIII.', icon:'🛶', type:'activity' },
       { time:'12:30 PM', title:'Almuerzo: Marshe Bieu', desc:'Mercado local. Stobá, keshi yena, pisca ku banana. Precio bajo.', icon:'🍽', type:'food' },
-      { time:'2:30 PM', title:'Murales de Scharloo + Otrobanda 📸', desc:'Barrio artístico con murales enormes. Galería al aire libre.', icon:'🎨', type:'activity' },
-      { time:'5:00 PM', title:'Atardecer Fort Nassau 🌅', desc:'Vista 360° de Willemstad. ⚠️ Reservar antes del 15 Sep.', icon:'🌅', type:'activity' },
+      { time:'2:30 PM', title:'Murales de Scharloo + Otrobanda', desc:'Barrio artístico con murales enormes. Galería al aire libre.', icon:'🎨', type:'activity' },
+      { time:'5:00 PM', title:'Atardecer Fort Nassau', desc:'Vista 360° de Willemstad. Reservar antes del 15 Sep.', icon:'🌅', type:'activity' },
     ],
     3: [
       { time:'6:30 AM', title:'Desayuno rápido y muelle', desc:'Salida temprana al punto de embarque.', icon:'☕', type:'activity' },
-      { time:'7:30 AM', title:'Zarpe hacia Klein Curazao ⛵', desc:'Isla deshabitada a 10 km. Viaje ~2 horas. Ambiente festivo.', icon:'⛵', type:'transport' },
-      { time:'9:30 AM', title:'Klein Curazao 📸 🚁', desc:'Playa blanca kilométrica, faro rosa, barco naufragado. Snorkel con tortugas. 🚁 DRONE OK.', icon:'🏝', type:'activity' },
+      { time:'7:30 AM', title:'Zarpe hacia Klein Curazao', desc:'Isla deshabitada a 10 km. Viaje ~2 horas. Ambiente festivo.', icon:'⛵', type:'transport' },
+      { time:'9:30 AM', title:'Klein Curazao', desc:'Playa blanca kilométrica, faro rosa, barco naufragado. Snorkel con tortugas. Drone permitido.', icon:'🏝', type:'activity' },
       { time:'1:00 PM', title:'Almuerzo a bordo (incluido)', desc:'Incluido en el tour.', icon:'🍽', type:'food' },
-      { time:'3:30 PM', title:'Regreso navegando al atardecer 🌅', desc:'El viaje de vuelta con el sol bajando es espectacular.', icon:'🌅', type:'transport' },
+      { time:'3:30 PM', title:'Regreso navegando al atardecer', desc:'El viaje de vuelta con el sol bajando es espectacular.', icon:'🌅', type:'transport' },
     ],
     4: [
-      { time:'8:00 AM', title:'Recoger carro 🚗', desc:'Con anfitrión del Airbnb ($30/día). Parada flamingos Jan Kok — solo fotos, NO drone.', icon:'🚗', type:'transport' },
-      { time:'9:30 AM', title:'Playa Kokomo 📸 🚁', desc:'El columpio viral de Curazao. Toma cenital drone = imagen épica. Entrada gratuita.', icon:'🏖', type:'activity' },
-      { time:'11:00 AM', title:'Playa Piskado 🐢 📸 🚁', desc:'Tortugas nadando entre los botes de pescadores. Llevar snorkel.', icon:'🐢', type:'activity' },
-      { time:'12:30 PM', title:'Almuerzo en Playa Lagun 🍽', desc:'Restaurante al borde del agua. Pescado fresco local.', icon:'🍽', type:'food' },
-      { time:'2:00 PM', title:'Grote Knip (Kenepa Grandi) 📸 🚁', desc:'La playa más fotografiada de la isla. Acantilados, agua turquesa. Drone = mejor toma del viaje.', icon:'📸', type:'activity' },
-      { time:'4:30 PM', title:'Kleine Knip — Atardecer 🌅 🚁', desc:'5 min de Grote Knip. Más íntima. Drone al atardecer sobre el agua.', icon:'🌅', type:'activity' },
-      { time:'7:00 PM', title:"Cena: Jaanchie's Restaurant 🍽", desc:'Legendario en Westpunt. Comida típica curazoleña auténtica.', icon:'🍽', type:'food' },
+      { time:'8:00 AM', title:'Recoger carro', desc:'Con anfitrión del Airbnb ($30/día). Parada flamingos Jan Kok — solo fotos, sin drone.', icon:'🚗', type:'transport' },
+      { time:'9:30 AM', title:'Playa Kokomo', desc:'El columpio viral de Curazao. Toma cenital con drone = imagen épica. Entrada gratuita.', icon:'🏖', type:'activity' },
+      { time:'11:00 AM', title:'Playa Piskado', desc:'Tortugas nadando entre los botes de pescadores. Llevar snorkel.', icon:'🐢', type:'activity' },
+      { time:'12:30 PM', title:'Almuerzo en Playa Lagun', desc:'Restaurante al borde del agua. Pescado fresco local.', icon:'🍽', type:'food' },
+      { time:'2:00 PM', title:'Grote Knip (Kenepa Grandi)', desc:'La playa más fotografiada de la isla. Acantilados, agua turquesa. Drone = mejor toma del viaje.', icon:'📸', type:'activity' },
+      { time:'4:30 PM', title:'Kleine Knip — Atardecer', desc:'5 min de Grote Knip. Más íntima. Drone al atardecer sobre el agua.', icon:'🌅', type:'activity' },
+      { time:'7:00 PM', title:"Cena: Jaanchie's Restaurant", desc:'Legendario en Westpunt. Comida típica curazoleña auténtica.', icon:'🍽', type:'food' },
     ],
     5: [
-      { time:'9:00 AM', title:'Cas Abao 📸 🚁', desc:'Playa privada ($13 USD). Aguas cristalinas, mirador. Cerditos en la tarde.', icon:'🏖', type:'activity' },
-      { time:'11:30 AM', title:'Porto Mari 🤿 🚁', desc:'Doble arrecife de coral. Vida marina a 2m de la orilla.', icon:'🤿', type:'activity' },
-      { time:'1:30 PM', title:'Almuerzo en Porto Mari 🍽', desc:'Restaurante de playa.', icon:'🍽', type:'food' },
-      { time:'3:30 PM', title:'Jan Thiel — Infinity Pool 🌅', desc:'Papagayo Beach Club. Último atardecer de playa del viaje.', icon:'🌅', type:'activity' },
-      { time:'8:00 PM', title:'Cena: Kome Willemstad ⭐', desc:'El mejor restaurante de la isla. ⚠️ Reservar antes del 10 Sep — URGENTE.', icon:'⭐', type:'food' },
+      { time:'9:00 AM', title:'Cas Abao', desc:'Playa privada ($13 USD). Aguas cristalinas, mirador. Cerditos en la tarde.', icon:'🏖', type:'activity' },
+      { time:'11:30 AM', title:'Porto Mari', desc:'Doble arrecife de coral. Vida marina a 2m de la orilla.', icon:'🤿', type:'activity' },
+      { time:'1:30 PM', title:'Almuerzo en Porto Mari', desc:'Restaurante de playa.', icon:'🍽', type:'food' },
+      { time:'3:30 PM', title:'Jan Thiel — Infinity Pool', desc:'Papagayo Beach Club. Último atardecer de playa del viaje.', icon:'🌅', type:'activity' },
+      { time:'8:00 PM', title:'Cena: Kome Willemstad', desc:'El mejor restaurante de la isla. Reservar antes del 10 Sep — urgente.', icon:'⭐', type:'food' },
     ],
     6: [
-      { time:'7:30 AM', title:'Parque Christoffel 🥾', desc:'Monte Christoffel (372m). Salir temprano. 1.5L agua + zapatos cerrados. 🚫 DRONE PROHIBIDO.', icon:'🥾', type:'activity' },
-      { time:'10:30 AM', title:'Shete Boka — Boka Tabla 📸 🚁', desc:'Cueva donde las olas rompen en los acantilados. 🚁 DRONE OK en la costa.', icon:'🌊', type:'activity' },
-      { time:'12:30 PM', title:'Almuerzo de regreso 🍽', desc:'Camino de vuelta hacia Willemstad.', icon:'🍽', type:'food' },
-      { time:'2:30 PM', title:'Cuevas de Hato 🦇', desc:'Estalactitas, arte rupestre arawak. Guía en español. ~$15 USD.', icon:'🦇', type:'activity' },
+      { time:'7:30 AM', title:'Parque Christoffel', desc:'Monte Christoffel (372m). Salir temprano. 1.5L agua + zapatos cerrados. Drone no permitido.', icon:'🥾', type:'activity' },
+      { time:'10:30 AM', title:'Shete Boka — Boka Tabla', desc:'Cueva donde las olas rompen en los acantilados. Drone permitido en la costa.', icon:'🌊', type:'activity' },
+      { time:'12:30 PM', title:'Almuerzo de regreso', desc:'Camino de vuelta hacia Willemstad.', icon:'🍽', type:'food' },
+      { time:'2:30 PM', title:'Cuevas de Hato', desc:'Estalactitas, arte rupestre arawak. Guía en español. ~$15 USD.', icon:'🦇', type:'activity' },
       { time:'5:00 PM', title:'Devolver el carro', desc:'Fin del alquiler. Mañana taxi.', icon:'🚗', type:'transport' },
     ],
     7: [
       { time:'9:00 AM', title:'Desayuno + check-out Airbnb', desc:'Última mañana en la isla.', icon:'☕', type:'activity' },
-      { time:'10:00 AM', title:'Compras en Punda 🛒', desc:'Blue Curaçao original, sal marina, artesanías.', icon:'🛒', type:'activity' },
-      { time:'12:30 PM', title:'Último almuerzo en la isla 🍽', desc:'Disfrutar cada bocado.', icon:'🍽', type:'food' },
-      { time:'3:00 PM', title:'Taxi al aeropuerto Hato 🚕', desc:'Llegar 3 horas antes. Pagar impuesto de salida (~$35-40 USD pp).', icon:'🚕', type:'transport' },
-      { time:'6:15 PM', title:'Vuelo de regreso ✈️', desc:'Maleta llena de recuerdos.', icon:'✈️', type:'transport' },
+      { time:'10:00 AM', title:'Compras en Punda', desc:'Blue Curaçao original, sal marina, artesanías.', icon:'🛒', type:'activity' },
+      { time:'12:30 PM', title:'Último almuerzo en la isla', desc:'Disfrutar cada bocado.', icon:'🍽', type:'food' },
+      { time:'3:00 PM', title:'Taxi al aeropuerto Hato', desc:'Llegar 3 horas antes. Pagar impuesto de salida (~$35-40 USD pp).', icon:'🚕', type:'transport' },
+      { time:'6:15 PM', title:'Vuelo de regreso', desc:'Maleta llena de recuerdos.', icon:'✈️', type:'transport' },
     ]
   };
 
@@ -108,43 +109,43 @@ async function seed() {
   // Checklist items
   const checkItems = [
     // URGENTE
-    { text:'Registrar drone — emails a CCAA y BTP', priority:'urgente', deadline:'Antes del 10 Sep', done:false },
-    { text:'Reservar Kome Willemstad para Lunes 5 Oct', priority:'urgente', deadline:'Antes del 10 Sep', done:false },
-    { text:'Reservar tour Klein Curazao (Miss Ann Boat Trips)', priority:'urgente', deadline:'Antes del 10 Sep', done:false },
-    { text:'Verificar vigencia pasaportes (mín. 6 meses)', priority:'urgente', deadline:'Esta semana', done:true },
-    { text:'Localizar carnet de vacuna fiebre amarilla', priority:'urgente', deadline:'Esta semana', done:false },
-    { text:'Verificar licencia de conducir vigente', priority:'urgente', deadline:'Esta semana', done:true },
+    { text:'Registrar drone — emails a CCAA y BTP', priority:'urgente', deadline:'Antes del 10 Sep', done:false, category:'documento' },
+    { text:'Reservar Kome Willemstad para Lunes 5 Oct', priority:'urgente', deadline:'Antes del 10 Sep', done:false, category:'reserva_restaurante' },
+    { text:'Reservar tour Klein Curazao (Miss Ann Boat Trips)', priority:'urgente', deadline:'Antes del 10 Sep', done:false, category:'reserva_tour' },
+    { text:'Verificar vigencia pasaportes (mín. 6 meses)', priority:'urgente', deadline:'Esta semana', done:true, category:'documento' },
+    { text:'Localizar carnet de vacuna fiebre amarilla', priority:'urgente', deadline:'Esta semana', done:false, category:'documento' },
+    { text:'Verificar licencia de conducir vigente', priority:'urgente', deadline:'Esta semana', done:true, category:'documento' },
     // IMPORTANTE
-    { text:'Reservar Fort Nassau para Viernes 2 Oct', priority:'importante', deadline:'Antes del 15 Sep', done:false },
-    { text:'Reservar Gouverneur de Rouville para Jueves 1 Oct', priority:'importante', deadline:'Antes del 20 Sep', done:false },
-    { text:'Confirmar carro con anfitrión Airbnb ($30/día Dom–Mar)', priority:'importante', deadline:'Antes del 15 Sep', done:false },
-    { text:'Avisar al banco — activar tarjeta para uso internacional', priority:'importante', deadline:'Antes del 20 Sep', done:false },
-    { text:'Contratar seguro médico de viaje', priority:'importante', deadline:'Antes del 20 Sep', done:false },
-    { text:'Verificar si tiquetes incluyen impuesto de salida', priority:'importante', deadline:'Antes del 15 Sep', done:true },
-    { text:'Conseguir $250–350 USD en efectivo', priority:'importante', deadline:'Antes del 28 Sep', done:false },
-    { text:'Comprar protector solar FPS 50+', priority:'importante', deadline:'Antes del 25 Sep', done:false },
-    { text:'Comprar zapatos cerrados para Monte Christoffel', priority:'importante', deadline:'Antes del 25 Sep', done:false },
+    { text:'Reservar Fort Nassau para Viernes 2 Oct', priority:'importante', deadline:'Antes del 15 Sep', done:false, category:'reserva_tour' },
+    { text:'Reservar Gouverneur de Rouville para Jueves 1 Oct', priority:'importante', deadline:'Antes del 20 Sep', done:false, category:'reserva_restaurante' },
+    { text:'Confirmar carro con anfitrión Airbnb ($30/día Dom–Mar)', priority:'importante', deadline:'Antes del 15 Sep', done:false, category:'logistica' },
+    { text:'Avisar al banco — activar tarjeta para uso internacional', priority:'importante', deadline:'Antes del 20 Sep', done:false, category:'logistica' },
+    { text:'Contratar seguro médico de viaje', priority:'importante', deadline:'Antes del 20 Sep', done:false, category:'logistica' },
+    { text:'Verificar si tiquetes incluyen impuesto de salida', priority:'importante', deadline:'Antes del 15 Sep', done:true, category:'documento' },
+    { text:'Conseguir $250–350 USD en efectivo', priority:'importante', deadline:'Antes del 28 Sep', done:false, category:'logistica' },
+    { text:'Comprar protector solar FPS 50+', priority:'importante', deadline:'Antes del 25 Sep', done:false, category:'compra' },
+    { text:'Comprar zapatos cerrados para Monte Christoffel', priority:'importante', deadline:'Antes del 25 Sep', done:false, category:'compra' },
     // NORMAL
-    { text:'Llenar DI Card en dcsa.cw (1–7 días antes)', priority:'normal', deadline:'25–30 Sep', done:true },
-    { text:'Imprimir tiquetes y reserva del Airbnb', priority:'normal', deadline:'30 Sep', done:false },
-    { text:'Imprimir autorizaciones drone (CCAA y BTP)', priority:'normal', deadline:'Al recibirlas', done:false },
-    { text:'Comprar bolso impermeable para el barco', priority:'normal', deadline:'Antes del 25 Sep', done:false },
-    { text:'Comprar baterías extra para el drone (mín. 2)', priority:'normal', deadline:'Antes del 25 Sep', done:false },
-    { text:'Comprar pastillas mareo Dramamine para el barco', priority:'normal', deadline:'Antes del 25 Sep', done:false },
-    { text:'Comprar 5–6 trajes de baño, shorts y camisetas', priority:'normal', deadline:'Antes del 25 Sep', done:false },
-    { text:'Preparar 2–3 outfits casuales-elegantes para cenar', priority:'normal', deadline:'Antes del 25 Sep', done:false },
-    { text:'Descargar mapas offline de Curazao en Google Maps', priority:'normal', deadline:'30 Sep', done:false },
-    { text:'Cargar power bank, drone y baterías (noche del 30 Sep)', priority:'normal', deadline:'30 Sep noche', done:false },
-    { text:'Revisar maletas: pasaportes, DI Card, autorizaciones', priority:'normal', deadline:'30 Sep noche', done:false },
-    { text:'Snorkel — llevar o confirmar alquiler allá ($10–15 USD)', priority:'normal', deadline:'Antes del 25 Sep', done:false },
+    { text:'Llenar DI Card en dcsa.cw (1–7 días antes)', priority:'normal', deadline:'25–30 Sep', done:true, category:'documento' },
+    { text:'Imprimir tiquetes y reserva del Airbnb', priority:'normal', deadline:'30 Sep', done:false, category:'documento' },
+    { text:'Imprimir autorizaciones drone (CCAA y BTP)', priority:'normal', deadline:'Al recibirlas', done:false, category:'documento' },
+    { text:'Comprar bolso impermeable para el barco', priority:'normal', deadline:'Antes del 25 Sep', done:false, category:'compra' },
+    { text:'Comprar baterías extra para el drone (mín. 2)', priority:'normal', deadline:'Antes del 25 Sep', done:false, category:'compra' },
+    { text:'Comprar pastillas mareo Dramamine para el barco', priority:'normal', deadline:'Antes del 25 Sep', done:false, category:'compra' },
+    { text:'Comprar 5–6 trajes de baño, shorts y camisetas', priority:'normal', deadline:'Antes del 25 Sep', done:false, category:'compra' },
+    { text:'Preparar 2–3 outfits casuales-elegantes para cenar', priority:'normal', deadline:'Antes del 25 Sep', done:false, category:'compra' },
+    { text:'Descargar mapas offline de Curazao en Google Maps', priority:'normal', deadline:'30 Sep', done:false, category:'equipo' },
+    { text:'Cargar power bank, drone y baterías (noche del 30 Sep)', priority:'normal', deadline:'30 Sep noche', done:false, category:'equipo' },
+    { text:'Revisar maletas: pasaportes, DI Card, autorizaciones', priority:'normal', deadline:'30 Sep noche', done:false, category:'documento' },
+    { text:'Snorkel — llevar o confirmar alquiler allá ($10–15 USD)', priority:'normal', deadline:'Antes del 25 Sep', done:false, category:'compra' },
   ];
 
   for (let i = 0; i < checkItems.length; i++) {
     const c = checkItems[i];
     await pool.query(`
-      INSERT INTO checklist_items (trip_id, text, priority, deadline, done, sort_order)
-      VALUES ($1,$2,$3,$4,$5,$6)
-    `, [tripId, c.text, c.priority, c.deadline, c.done, i]);
+      INSERT INTO checklist_items (trip_id, text, priority, deadline, done, category, sort_order)
+      VALUES ($1,$2,$3,$4,$5,$6,$7)
+    `, [tripId, c.text, c.priority, c.deadline, c.done, c.category, i]);
   }
 
   // Spots
@@ -165,6 +166,85 @@ async function seed() {
   }
 
   console.log('✅ Curazao trip seeded successfully!');
+  return tripId;
+}
+
+// Text-content categories for existing checklist rows, matched by exact text
+// (kept separate from seedFresh's checkItems so a redeploy can backfill
+// rows that were inserted before the `category` column existed).
+const CATEGORY_BY_TEXT = {
+  'Registrar drone — emails a CCAA y BTP': 'documento',
+  'Reservar Kome Willemstad para Lunes 5 Oct': 'reserva_restaurante',
+  'Reservar tour Klein Curazao (Miss Ann Boat Trips)': 'reserva_tour',
+  'Verificar vigencia pasaportes (mín. 6 meses)': 'documento',
+  'Localizar carnet de vacuna fiebre amarilla': 'documento',
+  'Verificar licencia de conducir vigente': 'documento',
+  'Reservar Fort Nassau para Viernes 2 Oct': 'reserva_tour',
+  'Reservar Gouverneur de Rouville para Jueves 1 Oct': 'reserva_restaurante',
+  'Confirmar carro con anfitrión Airbnb ($30/día Dom–Mar)': 'logistica',
+  'Avisar al banco — activar tarjeta para uso internacional': 'logistica',
+  'Contratar seguro médico de viaje': 'logistica',
+  'Verificar si tiquetes incluyen impuesto de salida': 'documento',
+  'Conseguir $250–350 USD en efectivo': 'logistica',
+  'Comprar protector solar FPS 50+': 'compra',
+  'Comprar zapatos cerrados para Monte Christoffel': 'compra',
+  'Llenar DI Card en dcsa.cw (1–7 días antes)': 'documento',
+  'Imprimir tiquetes y reserva del Airbnb': 'documento',
+  'Imprimir autorizaciones drone (CCAA y BTP)': 'documento',
+  'Comprar bolso impermeable para el barco': 'compra',
+  'Comprar baterías extra para el drone (mín. 2)': 'compra',
+  'Comprar pastillas mareo Dramamine para el barco': 'compra',
+  'Comprar 5–6 trajes de baño, shorts y camisetas': 'compra',
+  'Preparar 2–3 outfits casuales-elegantes para cenar': 'compra',
+  'Descargar mapas offline de Curazao en Google Maps': 'equipo',
+  'Cargar power bank, drone y baterías (noche del 30 Sep)': 'equipo',
+  'Revisar maletas: pasaportes, DI Card, autorizaciones': 'documento',
+  'Snorkel — llevar o confirmar alquiler allá ($10–15 USD)': 'compra',
+};
+
+// Idempotent cleanup for rows inserted before the icon system / category
+// column existed. Never touches `done` state or ordering.
+async function backfillCategories(tripId) {
+  for (const [text, category] of Object.entries(CATEGORY_BY_TEXT)) {
+    await pool.query(
+      `UPDATE checklist_items SET category=$1 WHERE trip_id=$2 AND text=$3 AND category IS DISTINCT FROM $1`,
+      [category, tripId, text]
+    );
+  }
+}
+
+async function cleanEmoji(tripId) {
+  const days = await pool.query('SELECT id, title, subtitle FROM days WHERE trip_id=$1', [tripId]);
+  for (const d of days.rows) {
+    const title = clean(d.title), subtitle = clean(d.subtitle);
+    if (title !== d.title || subtitle !== d.subtitle) {
+      await pool.query('UPDATE days SET title=$1, subtitle=$2 WHERE id=$3', [title, subtitle, d.id]);
+    }
+  }
+
+  const activities = await pool.query(
+    'SELECT a.id, a.title, a.description FROM activities a JOIN days d ON a.day_id=d.id WHERE d.trip_id=$1',
+    [tripId]
+  );
+  for (const a of activities.rows) {
+    const title = clean(a.title), description = clean(a.description);
+    if (title !== a.title || description !== a.description) {
+      await pool.query('UPDATE activities SET title=$1, description=$2 WHERE id=$3', [title, description, a.id]);
+    }
+  }
+}
+
+async function seed() {
+  const existing = await pool.query("SELECT id FROM trips WHERE name = 'Curazao 2025'");
+  let tripId;
+  if (existing.rows.length > 0) {
+    tripId = existing.rows[0].id;
+    console.log('Already seeded, running data cleanup...');
+  } else {
+    tripId = await seedFresh();
+  }
+  await cleanEmoji(tripId);
+  await backfillCategories(tripId);
   return tripId;
 }
 

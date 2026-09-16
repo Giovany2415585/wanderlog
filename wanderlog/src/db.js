@@ -53,8 +53,11 @@ async function initDB() {
       priority VARCHAR(20) DEFAULT 'normal',
       deadline VARCHAR(100),
       done BOOLEAN DEFAULT false,
+      category VARCHAR(30) DEFAULT 'tarea',
       sort_order INTEGER DEFAULT 0
     );
+
+    ALTER TABLE checklist_items ADD COLUMN IF NOT EXISTS category VARCHAR(30) DEFAULT 'tarea';
 
     CREATE TABLE IF NOT EXISTS spots (
       id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

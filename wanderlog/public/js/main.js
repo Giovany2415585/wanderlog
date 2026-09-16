@@ -66,12 +66,24 @@ document.querySelectorAll('.day-header').forEach(header => {
 });
 
 // CHECKLIST TOGGLE
+function animateCount(el, to) {
+  const from = parseInt(el.textContent) || 0;
+  if (from === to) { el.textContent = to + '%'; return; }
+  const start = performance.now(), dur = 600;
+  (function step(now) {
+    const p = Math.min(1, (now - start) / dur);
+    const eased = 1 - Math.pow(1 - p, 3);
+    el.textContent = Math.round(from + (to - from) * eased) + '%';
+    if (p < 1) requestAnimationFrame(step);
+  })(start);
+}
+
 document.querySelectorAll('.cbox').forEach(box => {
   box.addEventListener('click', async () => {
     const id = box.dataset.id;
     if (!id) {
       box.classList.toggle('checked');
-      const text = box.nextElementSibling;
+      const text = box.parentElement.querySelector('.ci-text');
       if (text) text.classList.toggle('done');
       return;
     }
@@ -79,18 +91,45 @@ document.querySelectorAll('.cbox').forEach(box => {
       const res = await fetch(`/api/checklist/${id}`, { method: 'PATCH' });
       const data = await res.json();
       box.classList.toggle('checked', data.done);
-      const text = box.nextElementSibling;
+      const text = box.parentElement.querySelector('.ci-text');
       if (text) text.classList.toggle('done', data.done);
       // Update progress bars
       document.querySelectorAll('.prog-fill').forEach(bar => bar.style.width = data.progress+'%');
       document.querySelectorAll('.big-fill').forEach(bar => bar.style.width = data.progress+'%');
-      document.querySelectorAll('.prog-pct-val').forEach(el => el.textContent = data.progress+'%');
-      document.querySelectorAll('.big-pct').forEach(el => el.textContent = data.progress+'%');
+      document.querySelectorAll('.prog-pct-val').forEach(el => animateCount(el, data.progress));
+      document.querySelectorAll('.big-pct').forEach(el => animateCount(el, data.progress));
       document.querySelectorAll('.prog-done-cnt').forEach(el => el.textContent = data.done_cnt);
-      showToast(data.done ? '✅ Tarea completada' : '↩️ Tarea pendiente');
+      showToast(data.done ? 'Tarea completada' : 'Tarea pendiente');
     } catch(e) { console.error(e); }
   });
 });
+
+// SPOTLIGHT HOVER GLOW
+document.querySelectorAll('.spotlight').forEach(card => {
+  card.addEventListener('mousemove', e => {
+    const r = card.getBoundingClientRect();
+    card.style.setProperty('--mx', ((e.clientX - r.left) / r.width * 100) + '%');
+    card.style.setProperty('--my', ((e.clientY - r.top) / r.height * 100) + '%');
+  });
+});
+
+// COUNT-UP ON SCROLL INTO VIEW
+const countObs = new IntersectionObserver((entries, obs) => {
+  entries.forEach(e => {
+    if (!e.isIntersecting) return;
+    const el = e.target, target = parseInt(el.dataset.target) || 0;
+    const isPct = el.textContent.includes('%');
+    const start = performance.now(), dur = 1100;
+    (function step(now) {
+      const p = Math.min(1, (now - start) / dur);
+      const eased = 1 - Math.pow(1 - p, 3);
+      el.textContent = Math.round(target * eased) + (isPct ? '%' : '');
+      if (p < 1) requestAnimationFrame(step);
+    })(start);
+    obs.unobserve(el);
+  });
+}, { threshold: 0.4 });
+document.querySelectorAll('.count-up').forEach(el => countObs.observe(el));
 
 // TOAST
 function showToast(msg) {
@@ -129,11 +168,11 @@ if (addTripForm) {
       const res = await fetch('/api/trips', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
       const trip = await res.json();
       if (trip.id) {
-        showToast('✈️ Viaje agregado correctamente');
+        showToast('Viaje agregado correctamente');
         modalOverlay.classList.remove('open');
         setTimeout(() => window.location.href = `/trip/${trip.id}`, 1200);
       }
-    } catch(e) { console.error(e); showToast('❌ Error al agregar el viaje'); }
+    } catch(e) { console.error(e); showToast('Error al agregar el viaje'); }
   });
 }
 

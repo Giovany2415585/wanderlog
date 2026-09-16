@@ -6,6 +6,9 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="WanderLog">
 <title>WanderLog — Tu diario de viajes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,500;1,9..144,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
@@ -13,13 +16,13 @@
 <canvas id="particles"></canvas>
 
 <nav id="nav">
-  <a href="/" class="logo">wander<span>log</span><sup>✈</sup></a>
+  <a href="/" class="logo">wander<span>log</span><span class="logo-mark"><%- icon('plane', {size:15}) %></span></a>
   <div class="nav-links">
     <a href="/">Inicio</a>
     <a href="#viajes">Mis viajes</a>
     <a href="#spots">Spots</a>
   </div>
-  <a href="#" class="nav-btn" id="openModal">+ Nuevo viaje</a>
+  <a href="#" class="nav-btn" id="openModal"><%- icon('sparkle', {size:13}) %> Nuevo viaje</a>
 </nav>
 
 <!-- HERO -->
@@ -28,24 +31,24 @@
   <div class="hero-overlay"></div>
   <div class="hero-overlay2"></div>
   <div class="hero-content">
-    <div class="hero-tag"><div class="hero-tag-dot"></div>✈️ Travel Vlog & Planner</div>
+    <div class="hero-tag"><div class="hero-tag-dot"></div><%- icon('plane', {size:13}) %> Travel Vlog & Planner</div>
     <h1 class="hero-title">Cada destino<br>tiene su <em>historia.</em><br>Cuéntala.</h1>
     <p class="hero-sub">Documenta tus aventuras, planea cada detalle y comparte el mundo desde tus ojos. Tu diario de viaje, siempre contigo.</p>
     <div class="hero-btns">
-      <a href="#viajes" class="btn-primary">🌎 Ver mis viajes</a>
+      <a href="#viajes" class="btn-primary"><%- icon('compass', {size:15}) %> Ver mis viajes</a>
       <% const upcoming = trips.find(t => t.status === 'upcoming'); %>
       <% if (upcoming) { %>
         <a href="/trip/<%= upcoming.id %>" class="btn-ghost">Ver <%= upcoming.name %> →</a>
       <% } %>
     </div>
     <div class="hero-stats">
-      <div class="stat-item"><div class="stat-num"><%= trips.length %></div><div class="stat-label">Viajes</div></div>
+      <div class="stat-item"><div class="stat-num count-up" data-target="<%= trips.length %>">0</div><div class="stat-label">Viajes</div></div>
       <div class="stat-div"></div>
-      <div class="stat-item"><div class="stat-num">7</div><div class="stat-label">Días</div></div>
+      <div class="stat-item"><div class="stat-num count-up" data-target="7">0</div><div class="stat-label">Días</div></div>
       <div class="stat-div"></div>
-      <div class="stat-item"><div class="stat-num">8</div><div class="stat-label">Playas</div></div>
+      <div class="stat-item"><div class="stat-num count-up" data-target="8">0</div><div class="stat-label">Playas</div></div>
       <div class="stat-div"></div>
-      <div class="stat-item"><div class="stat-num">5</div><div class="stat-label">Spots 📸</div></div>
+      <div class="stat-item"><div class="stat-num count-up" data-target="5">0</div><div class="stat-label">Spots</div></div>
     </div>
   </div>
   <div class="scroll-hint">
@@ -58,27 +61,26 @@
 
 <!-- TRIPS -->
 <section id="viajes" style="background:var(--cream);">
-  <div class="section-tag reveal">🗺 Colección</div>
+  <div class="section-tag reveal"><%- icon('compass', {size:13}) %> Colección</div>
   <h2 class="section-title reveal">Mis <em>destinos</em></h2>
   <p class="section-sub reveal">Cada tarjeta es un mundo por descubrir. Agrega el próximo.</p>
 
   <div class="trips-grid" style="margin-top:48px;">
     <% trips.forEach((trip, i) => { %>
-    <a href="/trip/<%= trip.id %>" class="tcard reveal d<%= (i%4)+1 %>">
+    <a href="/trip/<%= trip.id %>" class="tcard spotlight reveal d<%= (i%4)+1 %>">
       <div class="tcard-img <%= trip.status !== 'upcoming' ? 'tcard-coming' : '' %>">
         <div class="tcard-img-bg" style="background-image:url('<%= trip.cover_url %>')"></div>
         <div class="tcard-ov"></div>
         <% if (trip.status !== 'upcoming') { %><div class="coming-badge">Próximamente</div><% } %>
         <div class="tcard-status status-<%= trip.status === 'upcoming' ? 'upcoming' : trip.status === 'past' ? 'past' : 'planned' %>">
-          <%= trip.status === 'upcoming' ? '⏳ Próximo' : trip.status === 'past' ? '✅ Visitado' : '💭 Soñando' %>
+          <%- icon(STATUS_ICON[trip.status] || 'sparkle', {size:11}) %> <%= STATUS_LABEL[trip.status] || 'Soñando' %>
         </div>
       </div>
       <div class="tcard-body">
-        <div class="tcard-country"><%= trip.flag %> <%= trip.country %></div>
+        <div class="tcard-country"><%- icon('pin', {size:12}) %> <%= trip.country %></div>
         <div class="tcard-name"><%= trip.name %></div>
         <div class="tcard-meta">
           <span><%= trip.start_date ? new Date(trip.start_date).toLocaleDateString('es', {day:'numeric',month:'short'}) : 'Por planear' %></span>
-          <span><%= trip.flag %></span>
         </div>
         <span class="tcard-arrow">→</span>
       </div>
@@ -87,7 +89,7 @@
 
     <!-- ADD CARD -->
     <div class="add-card reveal" id="openModal2">
-      <div class="add-card-icon">✈️</div>
+      <div class="add-card-icon"><%- icon('plane', {size:40}) %></div>
       <div class="add-card-title">Nuevo destino</div>
       <div class="add-card-sub">Agrega tu próxima aventura</div>
     </div>
@@ -100,8 +102,8 @@
 <% const feat = trips.find(t => t.status === 'upcoming') || trips[0]; %>
 <% if (feat) { %>
 <section style="background:white;">
-  <div class="section-tag reveal">✨ Destacado</div>
-  <h2 class="section-title reveal"><%= feat.name %> — <em><%= feat.flag %></em></h2>
+  <div class="section-tag reveal"><%- icon('sparkle', {size:13}) %> Destacado</div>
+  <h2 class="section-title reveal"><%= feat.name %></h2>
   <p class="section-sub reveal"><%= feat.description || 'Haz clic para ver el itinerario completo, checklist y spots fotográficos.' %></p>
   <div style="margin-top:32px;" class="reveal">
     <a href="/trip/<%= feat.id %>" class="btn-primary">Ver itinerario completo →</a>
@@ -116,7 +118,7 @@
   <div class="footer-inner">
     <div>
       <a href="/" class="footer-logo">wander<span>log</span></a>
-      <div class="footer-tagline">Tu diario de aventuras · Hecho con ❤️ desde Colombia</div>
+      <div class="footer-tagline">Tu diario de aventuras · Hecho desde Colombia</div>
     </div>
     <div class="footer-links">
       <a href="/">Inicio</a>
@@ -129,7 +131,7 @@
 <!-- MODAL: ADD TRIP -->
 <div class="modal-overlay" id="modalOverlay">
   <div class="modal">
-    <div class="modal-title">✈️ Nuevo viaje</div>
+    <div class="modal-title"><%- icon('plane', {size:20}) %> Nuevo viaje</div>
     <div class="modal-sub">Agrega tu próximo destino y empieza a planear</div>
     <form id="addTripForm">
       <div class="form-row">
@@ -144,39 +146,35 @@
       </div>
       <div class="form-row">
         <div class="form-group">
-          <label class="form-label">Bandera (emoji)</label>
-          <input class="form-input" name="flag" placeholder="🇫🇷" maxlength="4">
-        </div>
-        <div class="form-group">
           <label class="form-label">Estado</label>
           <select class="form-input" name="status">
-            <option value="planned">💭 Soñando</option>
-            <option value="upcoming">⏳ Próximo</option>
-            <option value="past">✅ Visitado</option>
+            <option value="planned">Soñando</option>
+            <option value="upcoming">Próximo</option>
+            <option value="past">Visitado</option>
           </select>
         </div>
-      </div>
-      <div class="form-row">
         <div class="form-group">
           <label class="form-label">Fecha de inicio</label>
           <input class="form-input" name="start_date" type="date">
         </div>
+      </div>
+      <div class="form-row">
         <div class="form-group">
           <label class="form-label">Fecha de regreso</label>
           <input class="form-input" name="end_date" type="date">
+        </div>
+        <div class="form-group">
+          <label class="form-label">URL foto de portada</label>
+          <input class="form-input" name="cover_url" placeholder="https://images.unsplash.com/...">
         </div>
       </div>
       <div class="form-group">
         <label class="form-label">Descripción</label>
         <input class="form-input" name="description" placeholder="Una breve descripción del viaje...">
       </div>
-      <div class="form-group">
-        <label class="form-label">URL foto de portada (Unsplash)</label>
-        <input class="form-input" name="cover_url" placeholder="https://images.unsplash.com/...">
-      </div>
       <div class="modal-actions">
         <button type="button" class="btn-cancel" id="closeModal">Cancelar</button>
-        <button type="submit" class="btn-save">Crear viaje ✈️</button>
+        <button type="submit" class="btn-save">Crear viaje</button>
       </div>
     </form>
   </div>
