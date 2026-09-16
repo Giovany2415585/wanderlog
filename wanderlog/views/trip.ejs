@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title><%= trip.name %> — WanderLog</title>
+<link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+<canvas id="particles"></canvas>
+
+<nav id="nav">
+  <a href="/" class="logo">wander<span>log</span><sup>✈</sup></a>
+  <div class="nav-links">
+    <a href="/">← Mis viajes</a>
+    <a href="#itinerario">Itinerario</a>
+    <a href="#checklist">Checklist</a>
+    <a href="#spots">Spots</a>
+  </div>
+  <a href="/" class="nav-btn">← Volver</a>
+</nav>
+
+<!-- TRIP HERO -->
+<div class="trip-hero">
+  <div class="trip-hero-img" style="background-image:url('<%= trip.cover_url %>')"></div>
+  <div class="trip-hero-ov"></div>
+  <div class="trip-hero-content">
+    <div class="trip-hero-tag"><%= trip.flag %> <%= trip.country %></div>
+    <h1 class="trip-hero-title"><%= trip.name %></h1>
+    <p class="trip-hero-sub"><%= trip.description %></p>
+    <div class="trip-hero-pills">
+      <% if (trip.start_date) { %><span class="hpill">📅 <%= new Date(trip.start_date).toLocaleDateString('es',{day:'numeric',month:'long'}) %> — <%= new Date(trip.end_date).toLocaleDateString('es',{day:'numeric',month:'long',year:'numeric'}) %></span><% } %>
+      <span class="hpill"><%= days.length %> días</span>
+      <span class="hpill pill-teal">🚁 Drone habilitado</span>
+      <span class="hpill"><%= spots.length %> spots fotográficos</span>
+    </div>
+  </div>
+</div>
+
+<!-- TRIP LAYOUT -->
+<div class="trip-layout" id="itinerario">
+
+  <!-- MAIN: ITINERARY -->
+  <div class="trip-main">
+    <div class="itin-section-title reveal">Itinerario día a día</div>
+
+    <% days.forEach((day, i) => { %>
+    <div class="day-card reveal d<%= (i%4)+1 %>">
+      <div class="day-header">
+        <div class="day-badge">D<%= day.day_number %></div>
+        <div class="day-info">
+          <div class="day-title"><%= day.icon %> <%= day.title %></div>
+          <div class="day-sub"><%= day.subtitle %> <% if(day.date){ %> · <%= new Date(day.date).toLocaleDateString('es',{weekday:'long',day:'numeric',month:'short'}) %><% } %></div>
+        </div>
+        <div class="day-tags">
+          <% if (day.has_car) { %><span class="day-tag tag-car">🚗 Carro</span><% } %>
+          <% if (day.drone_ok) { %><span class="day-tag tag-drone">🚁 Drone OK</span><% } else { %><span class="day-tag tag-no-drone">🚫 Sin drone</span><% } %>
+        </div>
+        <span class="day-chevron">▼</span>
+      </div>
+      <div class="day-body">
+        <% day.activities.forEach(act => { %>
+        <div class="activity-row">
+          <div class="act-time"><%= act.time %></div>
+          <div class="act-dot dot-<%= act.type %>"></div>
+          <div class="act-info">
+            <div class="act-title"><%= act.icon %> <%= act.title %></div>
+            <% if (act.description) { %><div class="act-desc"><%= act.description %></div><% } %>
+          </div>
+        </div>
+        <% }) %>
+      </div>
+    </div>
+    <% }) %>
+  </div>
+
+  <!-- SIDEBAR -->
+  <div class="trip-sidebar">
+    <div class="sidebar-card reveal sticky" style="position:sticky;top:90px;">
+      <div class="sidebar-title">✅ Preparación</div>
+      <div class="prog-pct-val" style="font-family:'Playfair Display',serif;font-size:42px;font-weight:700;color:var(--purple);text-align:center;margin:6px 0 10px;"><%= progress %>%</div>
+      <div class="prog-bar">
+        <div class="prog-fill" style="width:<%= progress %>%"></div>
+      </div>
+      <div class="prog-info" style="margin-top:8px;">
+        <span><span class="prog-done-cnt"><%= doneCnt %></span> de <%= totalCnt %> tareas</span>
+        <span><%= totalCnt - doneCnt %> pendientes</span>
+      </div>
+
+      <div style="margin-top:20px;border-top:1px solid var(--cream2);padding-top:16px;">
+        <% const urgent = checklist.filter(c=>c.priority==='urgente' && !c.done).slice(0,4); %>
+        <% if (urgent.length > 0) { %>
+        <div style="font-size:12px;font-weight:700;color:var(--dark);margin-bottom:10px;">🔴 Urgentes pendientes</div>
+        <% urgent.forEach(item => { %>
+        <div class="ci">
+          <div class="cbox <%= item.done?'checked':'' %>" data-id="<%= item.id %>"></div>
+          <div>
+            <div class="ci-text <%= item.done?'done':'' %>"><%= item.text %></div>
+            <div class="ci-dl"><%= item.deadline %></div>
+          </div>
+        </div>
+        <% }) %>
+        <% } %>
+      </div>
+      <a href="#checklist" class="btn-primary" style="display:block;text-align:center;margin-top:16px;font-size:13px;padding:11px 20px;">Ver checklist completo →</a>
+    </div>
+  </div>
+</div>
+
+<div class="section-divider"></div>
+
+<!-- SPOTS -->
+<% if (spots.length > 0) { %>
+<section style="background:white;" id="spots">
+  <div class="section-tag reveal">📸 Fotografía</div>
+  <h2 class="section-title reveal">Spots <em>imperdibles</em></h2>
+  <p class="section-sub reveal">Las tomas que no pueden faltar — para drone y para cámara.</p>
+  <div class="spots-grid reveal">
+    <% spots.forEach((spot, i) => { %>
+    <div class="scard <%= i===0?'tall':'' %>">
+      <div class="scard-bg" style="background-image:url('<%= spot.photo_url %>')"></div>
+      <div class="scard-ov"></div>
+      <% if(spot.day_ref) { %><div class="scard-day"><%= spot.day_ref %></div><% } %>
+      <% if(spot.drone_ok) { %><div class="scard-drone">🚁 Drone OK</div><% } %>
+      <div class="scard-info">
+        <div class="scard-name"><%= spot.name %></div>
+        <div class="scard-sub"><%= spot.description %></div>
+      </div>
+    </div>
+    <% }) %>
+  </div>
+</section>
+<div class="section-divider"></div>
+<% } %>
+
+<!-- CHECKLIST FULL -->
+<section class="check-section-full" id="checklist">
+  <div class="section-tag reveal">✅ Preparación</div>
+  <h2 class="section-title reveal">Checklist del <em>viaje</em></h2>
+  <p class="section-sub reveal">Marca cada tarea a medida que avanzas. Todo se guarda automáticamente.</p>
+
+  <div class="check-cols">
+    <% ['urgente','importante','normal'].forEach((prio, pi) => { %>
+    <%
+      const items = checklist.filter(c=>c.priority===prio);
+      const labels = {urgente:'🔴 Urgente',importante:'🟡 Importante',normal:'🟢 Normal'};
+      const deadlines = {urgente:'Antes 10 Sep',importante:'Antes 20 Sep',normal:'Antes 30 Sep'};
+      const dotClasses = {urgente:'cdot-r',importante:'cdot-y',normal:'cdot-g'};
+    %>
+    <div class="check-col reveal d<%= pi+1 %>">
+      <div class="check-col-hd">
+        <div class="cdot <%= dotClasses[prio] %>"></div>
+        <div class="col-title"><%= labels[prio] %></div>
+        <div class="col-dl"><%= deadlines[prio] %></div>
+      </div>
+      <% items.forEach(item => { %>
+      <div class="ci">
+        <div class="cbox <%= item.done?'checked':'' %>" data-id="<%= item.id %>"></div>
+        <div>
+          <div class="ci-text <%= item.done?'done':'' %>"><%= item.text %></div>
+          <% if(item.deadline) { %><div class="ci-dl"><%= item.deadline %></div><% } %>
+        </div>
+      </div>
+      <% }) %>
+    </div>
+    <% }) %>
+  </div>
+
+  <div class="big-prog-card reveal" style="margin-top:20px;">
+    <div class="big-prog-left">
+      <div class="big-prog-title">Progreso total del checklist</div>
+      <div class="big-bar"><div class="big-fill" style="width:<%= progress %>%"></div></div>
+      <div class="big-prog-sub"><span class="prog-done-cnt"><%= doneCnt %></span> de <%= totalCnt %> tareas completadas · <%= totalCnt - doneCnt %> pendientes</div>
+    </div>
+    <div>
+      <div class="big-pct prog-pct-val"><%= progress %>%</div>
+      <div class="big-pct-label">completado</div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-inner">
+    <div>
+      <a href="/" class="footer-logo">wander<span>log</span></a>
+      <div class="footer-tagline">Tu diario de aventuras · Hecho con ❤️ desde Colombia</div>
+    </div>
+    <div class="footer-links">
+      <a href="/">← Mis viajes</a>
+      <a href="#itinerario">Itinerario</a>
+      <a href="#checklist">Checklist</a>
+    </div>
+  </div>
+  <div class="footer-copy">© 2025 WanderLog · Fotos: Unsplash</div>
+</footer>
+
+<div id="toast" class="toast"></div>
+
+<script src="/js/main.js"></script>
+</body>
+</html>
